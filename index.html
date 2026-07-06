@@ -4,504 +4,173 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f172a">
-  <meta name="description" content="Track days to payday, budget daily spend, and see savings growth examples. Works offline.">
-  <title>Payday Pro - Smart Budget Tracker</title>
-  <link rel="manifest" href="/payday-countdown-manager/manifest.json">
-  <link rel="icon" href="/payday-countdown-manager/icon-192.png">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" crossorigin="anonymous"></script>
+  <title>Payday Pro</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card-hover: #334155;
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --border: #334155;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      padding-bottom: 70px;
-    }
-.app { display: flex; min-height: 100vh; }
-.sidebar {
-      width: 240px;
-      background: var(--card);
-      border-right: 1px solid var(--border);
-      padding: 20px 0;
-      position: fixed;
-      height: 100vh;
-      overflow-y: auto;
-      z-index: 100;
-    }
-.logo {
-      font-size: 20px;
-      font-weight: 700;
-      padding: 0 20px 20px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-.nav-item {
-      padding: 12px 20px;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      user-select: none;
-    }
-.nav-item:hover,.nav-item.active { background: var(--card-hover); }
-.bottom-nav {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      padding: 8px 0;
-      z-index: 1000;
-      justify-content: space-around;
-    }
-.bottom-nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 11px;
-      transition: all 0.2s;
-    }
-.bottom-nav-item.active { color: var(--primary); }
-.bottom-nav-icon { font-size: 22px; }
-.main {
-      flex: 1;
-      margin-left: 240px;
-      padding: 30px;
-      max-width: 1200px;
-    }
-.header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-    h1 { font-size: 28px; font-weight: 700; }
-.grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-.card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
-    }
-.card h3 {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-.stat {
-      font-size: 36px;
-      font-weight: 700;
-      margin: 8px 0;
-    }
-.stat-sm { font-size: 24px; }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 16px;
-      font-family: inherit;
-    }
-    button {
-      width: 100%;
-      padding: 14px;
-      border-radius: 8px;
-      border: none;
-      background: var(--primary);
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    button:active { background: var(--primary-hover); transform: scale(0.98); }
-    button.secondary { background: var(--card-hover); }
-    button.danger { background: var(--danger); }
-    button.large { padding: 16px 32px; font-size: 18px; }
-.btn-group { display: flex; gap: 10px; margin-top: 12px; }
-.btn-group button { flex: 1; }
-.hidden { display: none!important; }
-.tab-content { display: none; animation: fadeIn 0.3s; }
-.tab-content.active { display: block; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-.progress-bar {
-      background: var(--bg);
-      border-radius: 8px;
-      height: 8px;
-      margin: 12px 0;
-      overflow: hidden;
-    }
-.progress-fill {
-      height: 100%;
-      width: 0%;
-      transition: width 0.5s, background 0.3s;
-      background: var(--success);
-    }
-.faq-item {
-      border-bottom: 1px solid var(--border);
-      padding: 16px 0;
-    }
-.faq-q {
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-.faq-a {
-      color: var(--text-muted);
-      margin-top: 12px;
-      display: none;
-    }
-.faq-a.show { display: block; }
-.badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      background: var(--primary);
-    }
-.investment-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      background: #0f172a;
+      color: #e2e8f0;
       padding: 16px;
-      margin-bottom: 12px;
-      transition: all 0.2s;
-    }
-.toast {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 16px 20px;
-      border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      z-index: 1001;
-      animation: slideUp 0.3s;
-    }
-    @keyframes slideUp {
-      from { transform: translate(-50%, 100px); }
-      to { transform: translate(-50%, 0); }
-    }
-.funny-text {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-style: italic;
-      margin-top: 8px;
-      text-align: center;
-    }
-.welcome-hero {
-      text-align: center;
-      padding: 40px 20px;
-      max-width: 600px;
+      max-width: 480px;
       margin: 0 auto;
     }
-.welcome-hero h1 {
-      font-size: 42px;
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .header p {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 16px;
       margin-bottom: 16px;
-      background: linear-gradient(135deg, #3b82f6, #10b981);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
     }
-.welcome-hero p {
-      font-size: 18px;
-      color: var(--text-muted);
-      margin-bottom: 30px;
-      line-height: 1.8;
+    .card-header {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 8px;
     }
-.feature-list {
-      text-align: left;
-      margin: 30px 0;
-      display: grid;
-      gap: 16px;
+    .card-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
     }
-.feature-item {
-      display: flex;
-      align-items: start;
-      gap: 12px;
+    .card-sub {
+      font-size: 14px;
+      color: #94a3b8;
     }
-.feature-icon { font-size: 24px; }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-.coin { display: inline-block; animation: bounce 2s infinite; }
-    footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px; }
-    footer a { color: var(--text-muted); text-decoration: none; }
-    @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .bottom-nav { display: flex; }
-  .main { margin-left: 0; padding: 20px; padding-bottom: 20px; }
-  .welcome-hero h1 { font-size: 32px; }
-  .header { margin-bottom: 20px; }
-  .grid { grid-template-columns: 1fr; }
-     body { padding-bottom: 70px; }
+    .progress-bg {
+      background: #0f172a;
+      height: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    .progress-fill {
+      background: #22c55e;
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+    .btn:active {
+      background: #2563eb;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .footer a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    .setup {
+      display: none;
+    }
+    .setup.active {
+      display: block;
+    }
+    .dashboard {
+      display: none;
+    }
+    .dashboard.active {
+      display: block;
     }
   </style>
 </head>
 <body>
-  <div id="splashAd" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s;">
-    <div style="text-align: center; padding: 20px;">
-      <div style="font-size: 32px; margin-bottom: 20px;">💰 Payday Pro</div>
-      <div id="adContainer" style="width: 320px; height: 250px; background: var(--card); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 20px auto; border: 1px solid var(--border);">
-        <div style="color: var(--text-muted); font-size: 14px;">
-          Advertisement<br>
-          <div style="font-size: 12px; margin-top: 8px;">Loading...</div>
-        </div>
-      </div>
-      <button onclick="closeSplashAd()" id="skipBtn" style="width: auto; padding: 10px 24px; margin-top: 20px; background: var(--card-hover); opacity: 0.5; pointer-events: none;">
-        Skip in <span id="countdown">5</span>s
-      </button>
+  <div class="header">
+    <h1>Payday Pro</h1>
+    <p>Track your money until next payday</p>
+  </div>
+
+  <div class="setup active" id="setup">
+    <div class="card">
+      <div class="card-header">Setup</div>
+      <input type="number" id="salary" placeholder="Monthly Salary (NGN)" step="0.01">
+      <input type="date" id="payday" placeholder="Next Payday">
+      <button class="btn" onclick="saveSetup()">Start Tracking</button>
     </div>
   </div>
 
-  <div class="app">
-    <aside class="sidebar">
-      <div class="logo">💰 Payday Pro</div>
-      <div class="nav-item active" data-tab="welcome">🏠 Home</div>
-      <div class="nav-item" data-tab="dashboard">📊 Dashboard</div>
-      <div class="nav-item" data-tab="transactions">💸 Transactions</div>
-      <div class="nav-item" data-tab="investments">📊 Savings</div>
-      <div class="nav-item" data-tab="settings">⚙️ Settings</div>
-      <div class="nav-item" data-tab="faq">❓ FAQ</div>
-    </aside>
+  <div class="dashboard" id="dashboard">
+    <div class="card">
+      <div class="card-header">DAYS UNTIL PAYDAY</div>
+      <div class="card-value" id="days-left">0</div>
+      <div class="card-sub" id="payday-date">Next payday: --</div>
+    </div>
 
-    <main class="main">
-      <div class="header">
-        <h1 id="pageTitle">Welcome</h1>
-        <button class="secondary" onclick="requestNotifications()" style="width: auto; padding: 10px 16px;">🔔 Alerts</button>
+    <div class="card">
+      <div class="card-header">AMOUNT LEFT</div>
+      <div class="card-value" id="amount-left">₦0.00</div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
       </div>
+    </div>
 
-      <div id="welcome" class="tab-content active">
-        <div class="welcome-hero">
-          <h1><span class="coin">💰</span> Payday Pro</h1>
-          <p>Stop living paycheck to paycheck. Track days left, see your daily budget, and explore savings growth examples.</p>
+    <div class="card">
+      <div class="card-header">SAFE TO SPEND TODAY</div>
+      <div class="card-value" id="safe-today">₦0.00</div>
+      <div class="card-sub" id="spent-today">₦0.00 spent of ₦0.00 today</div>
+    </div>
 
-          <div class="feature-list">
-            <div class="feature-item">
-              <span class="feature-icon">📊</span>
-              <div>
-                <strong>Smart Countdown</strong>
-                <div style="color: var(--text-muted); font-size: 14px;">Know exactly when money hits your account</div>
-              </div>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">💸</span>
-              <div>
-                <strong>Daily Budget Guard</strong>
-                <div style="color: var(--text-muted); font-size: 14px;">Never overspend before payday again</div>
-              </div>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">📈</span>
-              <div>
-                <strong>Savings Examples</strong>
-                <div style="color: var(--text-muted); font-size: 14px;">Educational examples of growth potential</div>
-              </div>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">🔒</span>
-              <div>
-                <strong>100% Private</strong>
-                <div style="color: var(--text-muted); font-size: 14px;">Your data never leaves your device</div>
-              </div>
-            </div>
-          </div>
+    <div class="card">
+      <div class="card-header">MONTHLY SAVINGS POTENTIAL</div>
+      <div class="card-value" id="savings-potential">₦0.00</div>
+      <div class="card-sub">If you spend ₦0 daily</div>
+    </div>
 
-          <button class="large" onclick="showPage('setup')">Go to Dashboard →</button>
-          <p style="margin-top: 20px; font-size: 13px; color: var(--text-muted);">Works 100% offline after first load</p>
-        </div>
-      </div>
-
-      <div id="setup" class="tab-content">
-        <div class="card">
-          <h2>Quick Setup - 30 Seconds</h2>
-          <p style="color: var(--text-muted); margin: 12px 0;">Tell us about your pay to get started</p>
-
-          <select id="currency">
-            <option value="USD">USD - US Dollar</option>
-            <option value="NGN">NGN - Nigerian Naira</option>
-            <option value="GBP">GBP - British Pound</option>
-            <option value="EUR">EUR - Euro</option>
-            <option value="GHS">GHS - Ghanaian Cedi</option>
-            <option value="KES">KES - Kenyan Shilling</option>
-          </select>
-
-          <input type="number" id="salary" placeholder="Monthly salary after tax" step="0.01">
-          <input type="date" id="nextPayday">
-
-          <div class="btn-group">
-            <button onclick="saveSetup()">Start Tracking →</button>
-            <button class="secondary" onclick="showPage('welcome')">← Back</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="dashboard" class="tab-content">
-        <div class="grid">
-          <div class="card">
-            <h3>Days Until Payday</h3>
-            <div class="stat" id="daysLeft">--</div>
-            <p style="color: var(--text-muted); font-size: 14px; text-align: center;" id="paydayDate">--</p>
-            <div class="funny-text" id="funnyText1"></div>
-          </div>
-
-          <div class="card">
-            <h3>Safe To Spend Today</h3>
-            <div class="stat" id="safeToSpend">$--</div>
-
-            <div class="progress-bar">
-              <div class="progress-fill" id="spendBar"></div>
-            </div>
-
-            <p style="color: var(--text-muted); font-size: 14px; text-align: center;">
-              <span id="spentToday">$0</span> spent of <span id="dailyBudget">$0</span> today
-            </p>
-            <div class="funny-text" id="funnyText2"></div>
-          </div>
-
-          <div class="card">
-            <h3>Monthly Savings Potential</h3>
-            <div class="stat stat-sm" id="savingsPotential">$--</div>
-            <p style="color: var(--text-muted); font-size: 14px; text-align: center;">If you follow daily budget</p>
-            <div class="funny-text" id="funnyText3"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Quick Add Transaction</h3>
-          <input type="number" id="quickAmount" placeholder="Amount" step="0.01">
-          <input type="text" id="quickNote" placeholder="What did you buy?">
-          <div class="btn-group">
-            <button onclick="addTx('expense')">- Add Expense</button>
-            <button onclick="addTx('income')" class="secondary">+ Add Income</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="transactions" class="tab-content">
-        <div class="card">
-          <h3>Recent Transactions</h3>
-          <div id="txList" style="margin-top: 16px;"></div>
-        </div>
-      </div>
-
-      <div id="investments" class="tab-content">
-        <div class="card">
-          <h3>Savings Growth Examples</h3>
-          <p style="color: var(--text-muted); margin: 12px 0;">Educational examples based on <span id="investBudget">$0</span>/month you could save. Not financial advice.</p>
-          <div id="investmentList"></div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-top: 20px;">⚠️ Educational examples only. Consult a licensed advisor before investing.</p>
-        </div>
-      </div>
-
-      <div id="settings" class="tab-content">
-        <div class="card">
-          <h3>Update Your Info</h3>
-          <select id="setCurrency"></select>
-          <input type="number" id="setSalary" placeholder="Monthly salary" step="0.01">
-          <input type="date" id="setNextPayday">
-          <button onclick="saveSettings()">Save Changes</button>
-        </div>
-
-        <div class="card">
-          <h3>Data Management</h3>
-          <button onclick="exportData()" class="secondary" style="margin-bottom: 10px;">📥 Export Backup</button>
-          <button onclick="document.getElementById('importFile').click()" class="secondary" style="margin-bottom: 10px;">📤 Import Backup</button>
-          <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
-          <button onclick="clearAllData()" class="danger">🗑️ Clear All Data & Reset</button>
-        </div>
-      </div>
-
-      <div id="faq" class="tab-content">
-        <div class="card">
-          <h3>Frequently Asked Questions</h3>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFAQ(this)">How is "Safe to Spend" calculated? <span>+</span></div>
-            <div class="faq-a">Your salary + income - expenses, divided by days left until payday.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFAQ(this)">Does this work offline? <span>+</span></div>
-            <div class="faq-a">Yes. Load once with internet, then works forever offline. Data stays on your phone.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFAQ(this)">Is this financial advice? <span>+</span></div>
-            <div class="faq-a">No. All savings examples are educational only. Consult a licensed financial advisor.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q" onclick="toggleFAQ(this)">How do I clear all data? <span>+</span></div>
-            <div class="faq-a">Go to Settings → Clear All Data. This resets the app to welcome screen.</div>
-          </div>
-        </div>
-      </div>
-
-      <footer>
-        <a href="/payday-countdown-manager/privacy.html">Privacy Policy</a> |
-        <a href="/payday-countdown-manager/terms.html">Terms of Service</a>
-      </footer>
-    </main>
+    <button class="btn" onclick="resetApp()">Reset Setup</button>
   </div>
 
-  <nav class="bottom-nav">
-    <div class="bottom-nav-item active" data-tab="welcome" onclick="showPage('welcome')">
-      <div class="bottom-nav-icon">🏠</div>
-      <div>Home</div>
-    </div>
-    <div class="bottom-nav-item" data-tab="dashboard" onclick="showPage('dashboard')">
-      <div class="bottom-nav-icon">📊</div>
-      <div>Dashboard</div>
-    </div>
-    <div class="bottom-nav-item" data-tab="transactions" onclick="showPage('transactions')">
-      <div class="bottom-nav-icon">💸</div>
-      <div>History</div>
-    </div>
-    <div class="bottom-nav-item" data-tab="investments" onclick="showPage('investments')">
-      <div class="bottom-nav-icon">📊</div>
-      <div>Savings</div>
-    </div>
-    <div class="bottom-nav-item" data-tab="settings" onclick="showPage('settings')">
-      <div class="bottom-nav-icon">⚙️</div>
-      <div>Settings</div>
-    </div>
-  </nav>
+  <div class="footer">
+    <a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a>
+  </div>
 
-  <script src="/payday-countdown-manager/app.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
 </body>
-  </html>
+</html>
