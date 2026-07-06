@@ -197,30 +197,34 @@ function saveSettings() {
 function updateDashboard() {
   if (!state.nextPayday) return;
 
-  const symbol = CURRENCY[state.currency] || '$';
+  const symbol = CURRENCY[state.currency] || '₦';
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const payday = new Date(state.nextPayday);
   payday.setHours(0, 0, 0, 0);
 
-  // Fix 1: NaN bug
+  // Fix 1: NaN bug + handle past payday
   const timeDiff = payday.getTime() - today.getTime();
-  const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+  const daysLeft = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
 
-  // Calculate spent
+  // Calculate ALL transactions since last payday
+  const paydayStart = new Date(state.nextPayday);
+  paydayStart.setMonth(paydayStart.getMonth() - 1);
+  paydayStart.setHours(0, 0, 0, 0);
+
   const totalExpenses = state.transactions
-  .filter(t => t.type === 'expense')
+  .filter(t => t.type === 'expense' && new Date(t.date) >= paydayStart)
   .reduce((sum, t) => sum + t.amount, 0);
 
   const totalIncome = state.transactions
-  .filter(t => t.type === 'income')
+  .filter(t => t.type === 'income' && new Date(t.date) >= paydayStart)
   .reduce((sum, t) => sum + t.amount, 0);
 
-  // Fix 2 & 3: Correct math
+  // Fix 2 & 3: MATH BUG - USE AMOUNT LEFT NOT SALARY
   const amountLeft = Math.max(0, state.salary + totalIncome - totalExpenses);
-  const dailyBudget = daysLeft > 0? amountLeft / daysLeft : 0;
-  const savingsPotential = amountLeft;
+  const dailyBudget = daysLeft > 0 ? amountLeft / daysLeft : 0;
+  const savingsPotential = amountLeft; // Max you can save is what's left
 
   // Today's spending
   const todayStr = new Date().toDateString();
@@ -233,6 +237,42 @@ function updateDashboard() {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
   };
+
+  updateEl('daysLeft', daysLeft);
+  updateEl('paydayDate', payday.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: payday.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+  }));
+  
+  // Show Amount Left card if you added it
+  const amountLeftEl = document.getElementById('amount-left');
+  if (amountLeftEl) {
+    amountLeftEl.textContent = `${symbol}${amountLeft.toFixed(2)}`;
+  }
+
+  updateEl('safeToSpend', `${symbol}${dailyBudget.toFixed(2)}`);
+  updateEl('dailyBudget', `${symbol}${dailyBudget.toFixed(2)}`);
+  updateEl('spentToday', `${symbol}${spentToday.toFixed(2)}`);
+  updateEl('savingsPotential', `${symbol}${savingsPotential.toFixed(2)}`);
+
+  // Progress bar - based on amount left
+  const percentSpent = state.salary > 0 ? (totalExpenses / state.salary) * 100 : 0;
+  const bar = document.getElementById('spendBar');
+  if (bar) {
+    bar.style.width = `${Math.min(100, percentSpent)}%`;
+    if (percentSpent > 100) bar.style.background = 'var(--danger)';
+    else if (percentSpent > 75) bar.style.background = 'var(--warning)';
+    else bar.style.background = 'var(--success)';
+  }
+
+  // Daily progress bar
+  const dailyBar = document.getElementById('daily-progress');
+  if (dailyBar) {
+    const dailyPercent = dailyBudget > 0 ? (spentToday / dailyBudget) * 100 : 0;
+    dailyBar.style.width = `${Math.min(100, dailyPercent)}%`;
+  }
+    }
 
   updateEl('daysLeft', daysLeft);
   updateEl('paydayDate', payday.toLocaleDateString('en-US', {
