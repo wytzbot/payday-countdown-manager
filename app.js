@@ -1,4 +1,3 @@
-// SAFE STATE
 let state = {
   salary: 0,
   nextPayday: '',
@@ -24,14 +23,47 @@ const FUNNY = [
 ];
 
 const INVESTMENTS = [
-  { name: 'High-Yield Savings Account', min: 100, type: 'Low Risk', desc: 'FDIC insured banks offer 4-5% APY. Safest option.' },
-  { name: 'Government Treasury Bills', min: 500, type: 'Low Risk', desc: 'Nigerian T-Bills or US Treasuries. 10-18% in Nigeria.' },
-  { name: 'S&P 500 ETF (VOO/SPY)', min: 300, type: 'Medium Risk', desc: 'Diversified US stocks. 7-10% average annual return.' },
-  { name: 'REITs - Real Estate', min: 1000, type: 'Medium Risk', desc: 'Property without buying houses. 6-8% dividend yield.' },
-  { name: 'PiggyVest/Cowrywise', min: 100, type: 'Low-Medium Risk', desc: 'Nigerian savings apps. 8-15% returns. Start small.' }
+  { name: 'High-Yield Savings Example', min: 100, type: 'Example Only', desc: 'Educational example: Banks may offer 4-5% APY. Not an offer or advice.' },
+  { name: 'Government Treasury Bills Example', min: 500, type: 'Example Only', desc: 'Educational example: T-Bills are govt debt. Rates vary. Not an offer or advice.' },
+  { name: 'Stock Index Fund Example', min: 300, type: 'Example Only', desc: 'Educational example: Diversified funds exist. Past returns ≠ future. Not advice.' },
+  { name: 'REITs Example', min: 1000, type: 'Example Only', desc: 'Educational example: Real estate investment trusts. Research risks. Not advice.' },
+  { name: 'Savings App Example', min: 100, type: 'Example Only', desc: 'Educational example: Fintech apps exist. Compare features. Not endorsement.' }
 ];
 
-// SAFE LOAD
+let splashTimer = 5;
+let splashInterval;
+
+function startSplashAd() {
+  splashInterval = setInterval(() => {
+    splashTimer--;
+    const countdown = document.getElementById('countdown');
+    if (countdown) countdown.textContent = splashTimer;
+    if (splashTimer <= 0) {
+      closeSplashAd();
+    }
+  }, 1000);
+
+  setTimeout(() => {
+    const skipBtn = document.getElementById('skipBtn');
+    if (skipBtn) {
+      skipBtn.style.opacity = '1';
+      skipBtn.style.pointerEvents = 'auto';
+      skipBtn.innerHTML = 'Skip Ad →';
+    }
+  }, 3000);
+}
+
+function closeSplashAd() {
+  clearInterval(splashInterval);
+  const splash = document.getElementById('splashAd');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => {
+      splash.style.display = 'none';
+    }, 500);
+  }
+}
+
 function load() {
   try {
     const saved = localStorage.getItem('paydayData');
@@ -62,7 +94,6 @@ function save() {
   }
 }
 
-// NAVIGATION - Syncs desktop + mobile
 function showPage(page) {
   ['welcome','setup','dashboard','transactions','investments','faq','settings'].forEach(p => {
     document.getElementById(p).classList.add('hidden');
@@ -85,11 +116,11 @@ function showPage(page) {
     setup: 'Setup',
     dashboard: 'Dashboard',
     transactions: 'Transactions',
-    investments: 'Invest',
+    investments: 'Savings',
     settings: 'Settings',
     faq: 'FAQ'
   };
-  document.getElementById('pageTitle').textContent = titles[page] || 'Payday Pro';
+  document.getElementById('pageTitle').textContent = titles || 'Payday Pro';
 
   if (page === 'dashboard') updateDash();
   if (page === 'transactions') renderTransactions();
@@ -129,14 +160,27 @@ function updateDash() {
     const remaining = state.salary + income - expenses;
     const safeToSpend = daysLeft > 0? remaining / daysLeft : remaining;
 
+    const todayStr = new Date().toDateString();
+    const spentToday = (state.expenses || [])
+    .filter(e => new Date(e.date).toDateString() === todayStr)
+    .reduce((s, e) => s + e.amount, 0);
+
+    const percentSpent = safeToSpend > 0? (spentToday / safeToSpend) * 100 : 0;
+
     const symbol = CURRENCIES[state.currency] || '$';
     document.getElementById('daysLeft').textContent = daysLeft;
     document.getElementById('paydayDate').textContent = payday.toLocaleDateString();
     document.getElementById('safeToSpend').textContent = symbol + Math.max(0, safeToSpend).toFixed(2);
     document.getElementById('savingsPotential').textContent = symbol + remaining.toFixed(2);
 
+    document.getElementById('spentToday').textContent = symbol + spentToday.toFixed(2);
+    document.getElementById('dailyBudget').textContent = symbol + Math.max(0, safeToSpend).toFixed(2);
+    const bar = document.getElementById('spendBar');
+    bar.style.width = Math.min(percentSpent, 100) + '%';
+    bar.style.background = percentSpent > 80? 'var(--danger)' : percentSpent > 50? 'var(--warning)' : 'var(--success)';
+
     document.getElementById('funnyText1').textContent = FUNNY[Math.floor(Math.random() * FUNNY.length)];
-    document.getElementById('funnyText2').textContent = FUNNY[Math.floor(Math.random() * FUNNY.length)];
+    document.getElementById('funnyText2').textContent = percentSpent > 100? "Bro you blew the budget 💀" : FUNNY[Math.floor(Math.random() * FUNNY.length)];
     document.getElementById('funnyText3').textContent = FUNNY[Math.floor(Math.random() * FUNNY.length)];
   } catch (e) {
     console.error(e);
@@ -167,8 +211,8 @@ function addTx(type) {
 function renderTransactions() {
   const list = document.getElementById('txList');
   const all = [
- ...(state.expenses || []).map(e => ({...e, type: 'expense'})),
- ...(state.income || []).map(i => ({...i, type: 'income'}))
+...(state.expenses || []).map(e => ({...e, type: 'expense'})),
+...(state.income || []).map(i => ({...i, type: 'income'}))
   ].sort((a,b) => new Date(b.date) - new Date(a.date));
 
   const symbol = CURRENCIES[state.currency] || '$';
@@ -205,7 +249,7 @@ function updateInvestments() {
       <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 8px;">${inv.desc}</p>
       <p style="font-size: 14px;">Min: ${symbol}${inv.min}</p>
     </div>
-  `).join('') : '<p style="color: var(--text-muted);">Increase savings to unlock investment ideas. Keep tracking!</p>';
+  `).join('') : '<p style="color: var(--text-muted);">Increase savings to unlock examples. Keep tracking!</p>';
 }
 
 function saveSettings() {
@@ -274,7 +318,6 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Setup desktop nav clicks
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -283,18 +326,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Register SW
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  window.addEventListener('load', () => {  window.addEventListener('load', () => {
     navigator.serviceWorker.register('/payday-countdown-manager/service-worker.js');
   });
 }
 
-// Start app
 window.addEventListener('load', () => {
   try {
+    startSplashAd();
     load();
   } catch (e) {
+    closeSplashAd();
     localStorage.clear();
     location.reload();
   }
