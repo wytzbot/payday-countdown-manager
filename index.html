@@ -555,4 +555,163 @@
       const list = document.getElementById('investmentList');
       if (!list) return;
       
-      const affordable = INVESTMENTS.filter(i => sa
+      const affordable = INVESTMENTS.filter(i => savings >= i.min);
+      list.innerHTML = affordable.length ? affordable.map(inv => `
+        <div class="investment-card">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <strong>${inv.name}</strong>
+            <span class="badge">${inv.type}</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 8px;">${inv.desc}</p>
+          <p style="font-size: 14px;">Min: ${formatMoney(inv.min)}</p>
+        </div>
+      `).join('') : '<p style="color: var(--text-muted);">Increase savings to unlock investment ideas</p>';
+    }
+
+    function saveSettings() {
+      state.country = document.getElementById('setCountry').value || state.country;
+      state.currency = document.getElementById('setCurrency').value || state.currency;
+      state.salary = parseFloat(document.getElementById('setSalary').value) || state.salary;
+      state.frequency = document.getElementById('setFrequency').value || state.frequency;
+      state.nextPayday = document.getElementById('setNextPayday').value || state.nextPayday;
+      saveState();
+      updateDashboard();
+      showToast('Settings saved');
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payday-pro-backup-${Date.now()}.json`;
+      a.click();
+      showToast('Backup downloaded');
+    }
+
+    function importData(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const imported = JSON.parse(evt.target.result);
+          state = { ...DEFAULT_STATE, ...imported };
+          saveState();
+          location.reload();
+        } catch (err) {
+          showToast('Invalid backup file');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetApp() {
+      if (!confirm('Delete all data? This cannot be undone.')) return;
+      localStorage.clear();
+      location.reload();
+    }
+
+    function setupTabs() {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const tab = item.dataset.tab;
+          document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+          item.classList.add('active');
+          document.getElementById(tab).classList.add('active');
+          document.getElementById('pageTitle').textContent = item.textContent.trim();
+          
+          if (tab === 'settings') {
+            document.getElementById('setSalary').value = state.salary || '';
+            document.getElementById('setNextPayday').value = state.nextPayday || '';
+          }
+          if (tab === 'transactions') renderTransactions();
+        });
+      });
+    }
+
+    function renderTransactions() {
+      const list = document.getElementById('txList');
+      const all = [
+        ...(state.expenses || []).map(e => ({...e, type: 'expense'})),
+        ...(state.income || []).map(i => ({...i, type: 'income'}))
+      ].sort((a,b) => new Date(b.date) - new Date(a.date));
+      
+      list.innerHTML = all.length ? all.map(tx => `
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <div>
+            <div style="font-weight: 600;">${tx.note || 'Transaction'}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">${new Date(tx.date).toLocaleDateString()}</div>
+          </div>
+          <div style="color: ${tx.type === 'expense' ? 'var(--danger)' : 'var(--success)'}; font-weight: 600;">
+            ${tx.type === 'expense' ? '-' : '+'}${formatMoney(tx.amount)}
+          </div>
+        </div>
+      `).join('') : '<p style="color: var(--text-muted);">No transactions yet</p>';
+    }
+
+    function toggleFAQ(el) {
+      const answer = el.nextElementSibling;
+      const icon = el.querySelector('span');
+      answer.classList.toggle('show');
+      icon.textContent = answer.classList.contains('show') ? '−' : '+';
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    async function requestNotifications() {
+      if (!('Notification' in window)) return showToast('Notifications not supported');
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        showToast('Notifications enabled! You\'ll get payday reminders.');
+        scheduleNotification();
+      }
+    }
+
+    function checkNotifications() {
+      if (Notification.permission === 'granted') {
+        scheduleNotification();
+      }
+    }
+
+    function scheduleNotification() {
+      const daysLeft = Math.ceil((new Date(state.nextPayday) - new Date()) / 86400000);
+      if (daysLeft === 3) {
+        new Notification('Payday Pro', {
+          body: `Payday in 3 days! Your safe-to-spend today is ${formatMoney(state.salary/30)}`,
+          icon: '/payday-countdown-manager/icon-192.png'
+        });
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/payday-countdown-manager/service-worker.js');
+      });
+    }
+
+    // SAFE START - wraps everything
+    window.addEventListener('load', () => {
+      try {
+        init();
+      } catch (e) {
+        console.error('Critical startup error:', e);
+        localStorage.clear();
+        location.reload();
+      }
+    });
+  </script>
+</body>
+</html>
