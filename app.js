@@ -1,4 +1,4 @@
-// SAFE STATE - prevents white screen crashes
+// SAFE STATE
 let state = {
   salary: 0,
   nextPayday: '',
@@ -28,14 +28,10 @@ const INVESTMENTS = [
   { name: 'Government Treasury Bills', min: 500, type: 'Low Risk', desc: 'Nigerian T-Bills or US Treasuries. 10-18% in Nigeria.' },
   { name: 'S&P 500 ETF (VOO/SPY)', min: 300, type: 'Medium Risk', desc: 'Diversified US stocks. 7-10% average annual return.' },
   { name: 'REITs - Real Estate', min: 1000, type: 'Medium Risk', desc: 'Property without buying houses. 6-8% dividend yield.' },
-  { name: 'Dividend Stocks', min: 500, type: 'Medium Risk', desc: 'MTN, Dangote, or US blue chips. Quarterly cash payouts.' },
-  { name: 'Crypto Index Fund', min: 50, type: 'High Risk', desc: 'Bitcoin/Ethereum mix. Very volatile. Only invest what you can lose.' },
   { name: 'PiggyVest/Cowrywise', min: 100, type: 'Low-Medium Risk', desc: 'Nigerian savings apps. 8-15% returns. Start small.' }
 ];
 
-let tabHistory = ['welcome'];
-
-// SAFE LOAD - never crashes
+// SAFE LOAD
 function load() {
   try {
     const saved = localStorage.getItem('paydayData');
@@ -44,7 +40,6 @@ function load() {
     localStorage.removeItem('paydayData');
   }
 
-  // Populate currency dropdown
   const currSel = document.getElementById('setCurrency');
   currSel.innerHTML = Object.keys(CURRENCIES).map(c =>
     `<option value="${c}">${c}</option>`
@@ -54,7 +49,6 @@ function load() {
   if (state.setupDone) {
     showPage('dashboard');
     updateDash();
-    tabHistory = ['welcome', 'dashboard'];
   } else {
     showPage('welcome');
   }
@@ -68,30 +62,34 @@ function save() {
   }
 }
 
-// NAVIGATION - fixes back button + dashboard clickable
+// NAVIGATION - Syncs desktop + mobile
 function showPage(page) {
   ['welcome','setup','dashboard','transactions','investments','faq','settings'].forEach(p => {
     document.getElementById(p).classList.add('hidden');
+    document.getElementById(p).classList.remove('active');
   });
+
   document.getElementById(page).classList.remove('hidden');
+  document.getElementById(page).classList.add('active');
 
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-  const navItem = document.querySelector(`[data-tab="${page}"]`);
+  const navItem = document.querySelector(`.nav-item[data-tab="${page}"]`);
   if (navItem) navItem.classList.add('active');
 
-  document.getElementById('pageTitle').textContent = navItem? navItem.textContent.trim() : 'Payday Pro';
+  document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
+  const bottomNavItem = document.querySelector(`.bottom-nav-item[data-tab="${page}"]`);
+  if (bottomNavItem) bottomNavItem.classList.add('active');
 
-  // Show/hide back button
-  const backBtn = document.getElementById('backBtn');
-  if (page!== 'welcome' && tabHistory.length > 1) {
-    backBtn.classList.add('show');
-  } else {
-    backBtn.classList.remove('show');
-  }
-
-  if (tabHistory[tabHistory.length - 1]!== page) {
-    tabHistory.push(page);
-  }
+  const titles = {
+    welcome: 'Welcome',
+    setup: 'Setup',
+    dashboard: 'Dashboard',
+    transactions: 'Transactions',
+    investments: 'Invest',
+    settings: 'Settings',
+    faq: 'FAQ'
+  };
+  document.getElementById('pageTitle').textContent = titles[page] || 'Payday Pro';
 
   if (page === 'dashboard') updateDash();
   if (page === 'transactions') renderTransactions();
@@ -100,19 +98,8 @@ function showPage(page) {
     document.getElementById('setSalary').value = state.salary || '';
     document.getElementById('setNextPayday').value = state.nextPayday || '';
   }
-}
 
-function goBack() {
-  if (tabHistory.length > 1) {
-    tabHistory.pop();
-    const prevTab = tabHistory[tabHistory.length - 1];
-    showPage(prevTab);
-    tabHistory.pop(); // Remove duplicate
-  }
-}
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
+  window.scrollTo(0, 0);
 }
 
 function saveSetup() {
@@ -148,7 +135,6 @@ function updateDash() {
     document.getElementById('safeToSpend').textContent = symbol + Math.max(0, safeToSpend).toFixed(2);
     document.getElementById('savingsPotential').textContent = symbol + remaining.toFixed(2);
 
-    // Funny texts
     document.getElementById('funnyText1').textContent = FUNNY[Math.floor(Math.random() * FUNNY.length)];
     document.getElementById('funnyText2').textContent = FUNNY[Math.floor(Math.random() * FUNNY.length)];
     document.getElementById('funnyText3').textContent = FUNNY[Math.floor(Math.random() * FUNNY.length)];
@@ -166,7 +152,6 @@ function addTx(type) {
   if (type === 'expense') {
     state.expenses = state.expenses || [];
     state.expenses.unshift(entry);
-    triggerMoneyRain();
   } else {
     state.income = state.income || [];
     state.income.unshift(entry);
@@ -179,28 +164,11 @@ function addTx(type) {
   updateDash();
 }
 
-function triggerMoneyRain() {
-  const container = document.createElement('div');
-  container.className = 'money-rain';
-  document.body.appendChild(container);
-
-  for (let i = 0; i < 15; i++) {
-    const drop = document.createElement('div');
-    drop.className = 'money-drop';
-    drop.textContent = ['💵', '💰', '🪙', '💸'][Math.floor(Math.random() * 4)];
-    drop.style.left = Math.random() * 100 + '%';
-    drop.style.animationDelay = Math.random() * 0.5 + 's';
-    container.appendChild(drop);
-  }
-
-  setTimeout(() => container.remove(), 2000);
-}
-
 function renderTransactions() {
   const list = document.getElementById('txList');
   const all = [
-   ...(state.expenses || []).map(e => ({...e, type: 'expense'})),
-   ...(state.income || []).map(i => ({...i, type: 'income'}))
+ ...(state.expenses || []).map(e => ({...e, type: 'expense'})),
+ ...(state.income || []).map(i => ({...i, type: 'income'}))
   ].sort((a,b) => new Date(b.date) - new Date(a.date));
 
   const symbol = CURRENCIES[state.currency] || '$';
@@ -268,7 +236,8 @@ function importData(e) {
       const imported = JSON.parse(evt.target.result);
       state = {...state,...imported };
       save();
-      location.reload();
+      showToast('Backup imported! Reloading...');
+      setTimeout(() => location.reload(), 1000);
     } catch (err) {
       showToast('Invalid backup file');
     }
@@ -292,7 +261,7 @@ function requestNotifications() {
   if (!('Notification' in window)) return showToast('Notifications not supported');
   Notification.requestPermission().then(perm => {
     if (perm === 'granted') {
-      showToast('Notifications enabled! You\'ll get payday reminders.');
+      showToast('Notifications enabled!');
     }
   });
 }
@@ -305,12 +274,11 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Setup nav clicks
+// Setup desktop nav clicks
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       showPage(item.dataset.tab);
-      document.getElementById('sidebar').classList.remove('open');
     });
   });
 });
@@ -322,7 +290,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Start app safely
+// Start app
 window.addEventListener('load', () => {
   try {
     load();
