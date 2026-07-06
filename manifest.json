@@ -1,7 +1,7 @@
 {
-  "name": "Payday Countdown",
-  "short_name": "Payday",
-  "description": "Track days to payday & daily safe-to-spend budget. Works offline.",
+  "name": "Payday Pro",
+  "short_name": "Payday Pro",
+  "description": "Smart budget tracker with payday countdown, multi-currency, and investment ideas. Works offline.",
   "start_url": "/payday-countdown-manager/",
   "scope": "/payday-countdown-manager/",
   "display": "standalone",
