@@ -1,4 +1,4 @@
-const CACHE_NAME = 'payday-pro-v2';
+const CACHE_NAME = 'payday-pro-v3';
 const BASE_PATH = '/payday-countdown-manager';
 
 const urlsToCache = [
@@ -13,8 +13,8 @@ const urlsToCache = [
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-     .then(cache => cache.addAll(urlsToCache))
-     .then(() => self.skipWaiting())
+  .then(cache => cache.addAll(urlsToCache))
+  .then(() => self.skipWaiting())
   );
 });
 
@@ -29,9 +29,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request)
-     .then(res => res || fetch(e.request))
-     .catch(() => e.request.mode === 'navigate'
-       ? caches.match(`${BASE_PATH}/index.html`)
+  .then(res => res || fetch(e.request))
+  .catch(() => e.request.mode === 'navigate'
+     ? caches.match(`${BASE_PATH}/index.html`)
         : null
       )
   );
