@@ -369,8 +369,8 @@
 
           <input type="number" id="salary" placeholder="Monthly salary after tax" step="0.01">
           <input type="date" id="nextPayday">
-
-          <div class="btn-group">
+          <input type="number" id="amountleft" placeholder="amount left out of salary" step="0.01">
+        <div class="btn-group">
             <button onclick="saveSetup()">Start Tracking →</button>
             <button class="secondary" onclick="showPage('welcome')">← Back</button>
           </div>
@@ -385,14 +385,7 @@
             <p style="color: var(--text-muted); font-size: 14px; text-align: center;" id="paydayDate">--</p>
             <div class="funny-text" id="funnyText1"></div>
           </div>
-          <div class="card">
-  <div class="card-header">AMOUNT LEFT</div>
-  <div class="card-value" id="amount-left">₦0.00</div>
-  <div class="progress-bg">
-    <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
-  </div>
-  <div class="card-sub funny-msg">Track every naira</div>
-          </div>
+        
 
           <div class="card">
             <h3>Safe To Spend Today</h3>
