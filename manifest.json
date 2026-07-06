@@ -1,0 +1,31 @@
+{
+  "name": "Payday Countdown - Salary Budget Planner",
+  "short_name": "Payday",
+  "description": "Track days until payday, calculate daily safe-to-spend budget. Offline salary calculator and budget planner for personal finance.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
+    }
+  ]
+}
