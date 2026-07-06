@@ -1,4 +1,4 @@
-const CACHE_NAME = 'payday-pro-v3';
+const CACHE_NAME = 'payday-pro-v5';
 const BASE_PATH = '/payday-countdown-manager';
 
 const urlsToCache = [
@@ -6,6 +6,8 @@ const urlsToCache = [
   `${BASE_PATH}/index.html`,
   `${BASE_PATH}/app.js`,
   `${BASE_PATH}/manifest.json`,
+  `${BASE_PATH}/privacy.html`,
+  `${BASE_PATH}/terms.html`,
   `${BASE_PATH}/icon-192.png`,
   `${BASE_PATH}/icon-512.png`
 ];
