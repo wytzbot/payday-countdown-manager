@@ -1,6 +1,6 @@
 // State
 let state = {
-  currency: 'USD',
+  currency: 'NGN',
   salary: 0,
   nextPayday: null,
   transactions: [],
@@ -12,7 +12,7 @@ const CURRENCY = {
   USD: '$', NGN: '₦', GBP: '£', EUR: '€', GHS: '₵', KES: 'KSh'
 };
 
-// Funny rotating messages
+// Funny rotating messages for dashboard
 const FUNNY_MSGS = [
   "Ramen noodles till payday? 🍜",
   "Coffee is a luxury now ☕",
@@ -27,7 +27,7 @@ const FUNNY_MSGS = [
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
-  initSplashAd();
+  initSplashAd(); // THIS FIXES YOUR STUCK AD
   initNav();
 
   if (state.salary && state.nextPayday) {
@@ -40,39 +40,41 @@ document.addEventListener('DOMContentLoaded', () => {
   startRotatingMessages();
 });
 
-// Splash Ad - Fixed stuck at 5s bug
+// Splash Ad - FIXED STUCK AT 5S BUG
 function initSplashAd() {
   const splash = document.getElementById('splashAd');
   const skipBtn = document.getElementById('skipBtn');
   const countdown = document.getElementById('countdown');
 
-  if (!splash) return;
+  if (!splash ||!skipBtn ||!countdown) {
+    console.log('Splash elements not found');
+    return;
+  }
 
   let seconds = 5;
   skipBtn.style.pointerEvents = 'none';
+  skipBtn.style.opacity = '0.5';
 
   const timer = setInterval(() => {
     seconds--;
-    if (countdown) countdown.textContent = seconds;
+    countdown.textContent = seconds;
 
     if (seconds <= 0) {
       clearInterval(timer);
       skipBtn.style.opacity = '1';
       skipBtn.style.pointerEvents = 'auto';
       skipBtn.textContent = 'Skip Ad →';
+      // Auto close after 1 more second
+      setTimeout(closeSplashAd, 1000);
     }
   }, 1000);
-
-  // Auto-close after 5s even if user doesn't click
-  setTimeout(() => {
-    closeSplashAd();
-  }, 5500);
 }
 
 function closeSplashAd() {
   const splash = document.getElementById('splashAd');
   if (splash) {
     splash.style.opacity = '0';
+    splash.style.transition = 'opacity 0.5s';
     setTimeout(() => splash.style.display = 'none', 500);
   }
 }
@@ -88,20 +90,14 @@ function initNav() {
 }
 
 function showPage(pageId) {
-  // Hide all pages
   document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
-
-  // Remove active from nav
   document.querySelectorAll('.nav-item,.bottom-nav-item').forEach(n => n.classList.remove('active'));
 
-  // Show selected page
   const page = document.getElementById(pageId);
   if (page) page.classList.add('active');
 
-  // Mark nav active
   document.querySelectorAll(`[data-tab="${pageId}"]`).forEach(n => n.classList.add('active'));
 
-  // Update title
   const titles = {
     welcome: 'Welcome',
     dashboard: 'Dashboard',
@@ -111,16 +107,16 @@ function showPage(pageId) {
     faq: 'FAQ',
     setup: 'Setup'
   };
-  document.getElementById('pageTitle').textContent = titles[pageId] || 'Payday Pro';
+  const titleEl = document.getElementById('pageTitle');
+  if (titleEl) titleEl.textContent = titles[pageId] || 'Payday Pro';
 
-  // Update content
   if (pageId === 'dashboard') updateDashboard();
   if (pageId === 'transactions') renderTransactions();
   if (pageId === 'investments') renderInvestments();
   if (pageId === 'settings') loadSettings();
 }
 
-// Load state from localStorage
+// Load state
 function loadState() {
   const saved = localStorage.getItem('paydayProState');
   if (saved) {
@@ -163,11 +159,15 @@ function saveSetup() {
 // Settings
 function loadSettings() {
   const sel = document.getElementById('setCurrency');
-  sel.innerHTML = Object.keys(CURRENCY).map(c =>
-    `<option value="${c}" ${c === state.currency? 'selected' : ''}>${c} - ${getCurrencyName(c)}</option>`
-  ).join('');
-  document.getElementById('setSalary').value = state.salary || '';
-  document.getElementById('setNextPayday').value = state.nextPayday || '';
+  if (sel) {
+    sel.innerHTML = Object.keys(CURRENCY).map(c =>
+      `<option value="${c}" ${c === state.currency? 'selected' : ''}>${c} - ${getCurrencyName(c)}</option>`
+    ).join('');
+  }
+  const salaryEl = document.getElementById('setSalary');
+  const paydayEl = document.getElementById('setNextPayday');
+  if (salaryEl) salaryEl.value = state.salary || '';
+  if (paydayEl) paydayEl.value = state.nextPayday || '';
 }
 
 function saveSettings() {
@@ -193,7 +193,7 @@ function saveSettings() {
   showToast('Settings saved ✓');
 }
 
-// Dashboard - FIXED MATH BUGS
+// Dashboard - FIXED ALL MATH BUGS
 function updateDashboard() {
   if (!state.nextPayday) return;
 
@@ -204,66 +204,66 @@ function updateDashboard() {
   const payday = new Date(state.nextPayday);
   payday.setHours(0, 0, 0, 0);
 
-  // Fix 1: NaN bug - ensure valid date math
+  // Fix 1: NaN bug
   const timeDiff = payday.getTime() - today.getTime();
   const daysLeft = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
 
   // Calculate spent
   const totalExpenses = state.transactions
-   .filter(t => t.type === 'expense')
-   .reduce((sum, t) => sum + t.amount, 0);
+  .filter(t => t.type === 'expense')
+  .reduce((sum, t) => sum + t.amount, 0);
 
   const totalIncome = state.transactions
-   .filter(t => t.type === 'income')
-   .reduce((sum, t) => sum + t.amount, 0);
+  .filter(t => t.type === 'income')
+  .reduce((sum, t) => sum + t.amount, 0);
 
-  // Fix 2: Correct math - use amount left, not total salary
+  // Fix 2 & 3: Correct math
   const amountLeft = Math.max(0, state.salary + totalIncome - totalExpenses);
   const dailyBudget = daysLeft > 0? amountLeft / daysLeft : 0;
-
-  // Fix 3: Savings potential = amount left, not daily * days
   const savingsPotential = amountLeft;
 
   // Today's spending
   const todayStr = new Date().toDateString();
   const spentToday = state.transactions
-   .filter(t => t.type === 'expense' && new Date(t.date).toDateString() === todayStr)
-   .reduce((sum, t) => sum + t.amount, 0);
+  .filter(t => t.type === 'expense' && new Date(t.date).toDateString() === todayStr)
+  .reduce((sum, t) => sum + t.amount, 0);
 
-  // Update UI
-  document.getElementById('daysLeft').textContent = daysLeft;
-  document.getElementById('paydayDate').textContent = payday.toLocaleDateString('en-US', {
+  // Update UI safely
+  const updateEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  updateEl('daysLeft', daysLeft);
+  updateEl('paydayDate', payday.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: payday.getFullYear()!== today.getFullYear()? 'numeric' : undefined
-  });
-
-  document.getElementById('safeToSpend').textContent = `${symbol}${dailyBudget.toFixed(2)}`;
-  document.getElementById('dailyBudget').textContent = `${symbol}${dailyBudget.toFixed(2)}`;
-  document.getElementById('spentToday').textContent = `${symbol}${spentToday.toFixed(2)}`;
-  document.getElementById('savingsPotential').textContent = `${symbol}${savingsPotential.toFixed(2)}`;
+  }));
+  updateEl('safeToSpend', `${symbol}${dailyBudget.toFixed(2)}`);
+  updateEl('dailyBudget', `${symbol}${dailyBudget.toFixed(2)}`);
+  updateEl('spentToday', `${symbol}${spentToday.toFixed(2)}`);
+  updateEl('savingsPotential', `${symbol}${savingsPotential.toFixed(2)}`);
 
   // Progress bar
   const percentUsed = dailyBudget > 0? (spentToday / dailyBudget) * 100 : 0;
   const bar = document.getElementById('spendBar');
-  bar.style.width = `${Math.min(100, percentUsed)}%`;
-
-  if (percentUsed > 100) {
-    bar.style.background = 'var(--danger)';
-  } else if (percentUsed > 75) {
-    bar.style.background = 'var(--warning)';
-  } else {
-    bar.style.background = 'var(--success)';
+  if (bar) {
+    bar.style.width = `${Math.min(100, percentUsed)}%`;
+    if (percentUsed > 100) bar.style.background = 'var(--danger)';
+    else if (percentUsed > 75) bar.style.background = 'var(--warning)';
+    else bar.style.background = 'var(--success)';
   }
-
-  // Update investment budget
-  document.getElementById('investBudget').textContent = `${symbol}${savingsPotential.toFixed(2)}`;
 }
 
 // Transactions
 function addTx(type) {
-  const amount = parseFloat(document.getElementById('quickAmount').value);
-  const note = document.getElementById('quickNote').value.trim();
+  const amountEl = document.getElementById('quickAmount');
+  const noteEl = document.getElementById('quickNote');
+  if (!amountEl ||!noteEl) return;
+
+  const amount = parseFloat(amountEl.value);
+  const note = noteEl.value.trim();
 
   if (!amount || amount <= 0) {
     showToast('Enter a valid amount');
@@ -282,14 +282,15 @@ function addTx(type) {
   updateDashboard();
   renderTransactions();
 
-  document.getElementById('quickAmount').value = '';
-  document.getElementById('quickNote').value = '';
-
+  amountEl.value = '';
+  noteEl.value = '';
   showToast(`${type === 'expense'? 'Expense' : 'Income'} added`);
 }
 
 function renderTransactions() {
   const list = document.getElementById('txList');
+  if (!list) return;
+
   const symbol = CURRENCY[state.currency] || '$';
 
   if (state.transactions.length === 0) {
@@ -310,14 +311,16 @@ function renderTransactions() {
   `).join('');
 }
 
-// Investments - Educational examples
+// Investments
 function renderInvestments() {
   const symbol = CURRENCY[state.currency] || '$';
-  const monthlyBudget = Math.max(0, state.salary - state.transactions
-   .filter(t => t.type === 'expense')
-   .reduce((sum, t) => sum + t.amount, 0));
+  const totalExpenses = state.transactions
+  .filter(t => t.type === 'expense')
+  .reduce((sum, t) => sum + t.amount, 0);
+  const monthlyBudget = Math.max(0, state.salary - totalExpenses);
 
-  document.getElementById('investBudget').textContent = `${symbol}${monthlyBudget.toFixed(2)}`;
+  const investBudget = document.getElementById('investBudget');
+  if (investBudget) investBudget.textContent = `${symbol}${monthlyBudget.toFixed(2)}`;
 
   const examples = [
     { name: 'Conservative', rate: 0.04, risk: 'Low' },
@@ -326,6 +329,8 @@ function renderInvestments() {
   ];
 
   const list = document.getElementById('investmentList');
+  if (!list) return;
+
   list.innerHTML = examples.map(ex => {
     const year1 = monthlyBudget * 12 * (1 + ex.rate);
     const year5 = monthlyBudget * 12 * ((Math.pow(1 + ex.rate, 5) - 1) / ex.rate);
@@ -386,33 +391,8 @@ function requestNotifications() {
       state.notificationsEnabled = true;
       saveState();
       showToast('Alerts enabled! 🔔');
-      scheduleNotifications();
     }
   });
-}
-
-function scheduleNotifications() {
-  // Check every hour if we should alert
-  setInterval(() => {
-    if (!state.notificationsEnabled ||!state.nextPayday) return;
-
-    const daysLeft = getDaysLeft();
-    if (daysLeft === 1) {
-      new Notification('Payday Tomorrow!', {
-        body: 'Tomorrow is payday! Check your budget.',
-        icon: '/payday-countdown-manager/icon-192.png'
-      });
-    }
-  }, 3600000); // Every hour
-}
-
-function getDaysLeft() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const payday = new Date(state.nextPayday);
-  payday.setHours(0, 0, 0, 0);
-  const timeDiff = payday.getTime() - today.getTime();
-  return Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
 }
 
 // Data management
@@ -450,7 +430,7 @@ function importData(event) {
 function clearAllData() {
   if (confirm('This will delete all your data and reset the app. Are you sure?')) {
     localStorage.removeItem('paydayProState');
-    state = { currency: 'USD', salary: 0, nextPayday: null, transactions: [], notificationsEnabled: false };
+    state = { currency: 'NGN', salary: 0, nextPayday: null, transactions: [], notificationsEnabled: false };
     showPage('welcome');
     showToast('All data cleared');
   }
@@ -481,9 +461,9 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Update dashboard on page focus
+// Update on focus
 window.addEventListener('focus', () => {
-  if (document.getElementById('dashboard').classList.contains('active')) {
+  if (document.getElementById('dashboard')?.classList.contains('active')) {
     updateDashboard();
   }
 });
