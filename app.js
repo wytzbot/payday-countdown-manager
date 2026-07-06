@@ -34,17 +34,27 @@ let splashTimer = 5;
 let splashInterval;
 
 function startSplashAd() {
+  const splash = document.getElementById('splashAd');
+  const countdown = document.getElementById('countdown');
+  const skipBtn = document.getElementById('skipBtn');
+  
+  if (!splash) return;
+  
+  // Failsafe: Force close after 6 seconds no matter what
+  setTimeout(() => {
+    closeSplashAd();
+  }, 6000);
+  
   splashInterval = setInterval(() => {
     splashTimer--;
-    const countdown = document.getElementById('countdown');
-    if (countdown) countdown.textContent = splashTimer;
+    if (countdown) countdown.textContent = Math.max(0, splashTimer);
     if (splashTimer <= 0) {
       closeSplashAd();
     }
   }, 1000);
 
+  // Enable skip button after 3 seconds
   setTimeout(() => {
-    const skipBtn = document.getElementById('skipBtn');
     if (skipBtn) {
       skipBtn.style.opacity = '1';
       skipBtn.style.pointerEvents = 'auto';
@@ -73,10 +83,12 @@ function load() {
   }
 
   const currSel = document.getElementById('setCurrency');
-  currSel.innerHTML = Object.keys(CURRENCIES).map(c =>
-    `<option value="${c}">${c}</option>`
-  ).join('');
-  currSel.value = state.currency;
+  if (currSel) {
+    currSel.innerHTML = Object.keys(CURRENCIES).map(c =>
+      `<option value="${c}">${c}</option>`
+    ).join('');
+    currSel.value = state.currency;
+  }
 
   if (state.setupDone) {
     showPage('dashboard');
@@ -96,12 +108,18 @@ function save() {
 
 function showPage(page) {
   ['welcome','setup','dashboard','transactions','investments','faq','settings'].forEach(p => {
-    document.getElementById(p).classList.add('hidden');
-    document.getElementById(p).classList.remove('active');
+    const el = document.getElementById(p);
+    if (el) {
+      el.classList.add('hidden');
+      el.classList.remove('active');
+    }
   });
 
-  document.getElementById(page).classList.remove('hidden');
-  document.getElementById(page).classList.add('active');
+  const pageEl = document.getElementById(page);
+  if (pageEl) {
+    pageEl.classList.remove('hidden');
+    pageEl.classList.add('active');
+  }
 
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   const navItem = document.querySelector(`.nav-item[data-tab="${page}"]`);
@@ -120,14 +138,16 @@ function showPage(page) {
     settings: 'Settings',
     faq: 'FAQ'
   };
-  document.getElementById('pageTitle').textContent = titles || 'Payday Pro';
+  document.getElementById('pageTitle').textContent = titles[page] || 'Payday Pro';
 
   if (page === 'dashboard') updateDash();
   if (page === 'transactions') renderTransactions();
   if (page === 'investments') updateInvestments();
   if (page === 'settings') {
-    document.getElementById('setSalary').value = state.salary || '';
-    document.getElementById('setNextPayday').value = state.nextPayday || '';
+    const salaryEl = document.getElementById('setSalary');
+    const paydayEl = document.getElementById('setNextPayday');
+    if (salaryEl) salaryEl.value = state.salary || '';
+    if (paydayEl) paydayEl.value = state.nextPayday || '';
   }
 
   window.scrollTo(0, 0);
@@ -162,8 +182,8 @@ function updateDash() {
 
     const todayStr = new Date().toDateString();
     const spentToday = (state.expenses || [])
-    .filter(e => new Date(e.date).toDateString() === todayStr)
-    .reduce((s, e) => s + e.amount, 0);
+   .filter(e => new Date(e.date).toDateString() === todayStr)
+   .reduce((s, e) => s + e.amount, 0);
 
     const percentSpent = safeToSpend > 0? (spentToday / safeToSpend) * 100 : 0;
 
@@ -327,18 +347,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {  window.addEventListener('load', () => {
+  window.addEventListener('load', () => {
     navigator.serviceWorker.register('/payday-countdown-manager/service-worker.js');
   });
 }
 
+// THIS IS THE CRITICAL PART - starts splash + loads app
 window.addEventListener('load', () => {
   try {
-    startSplashAd();
+    startSplashAd(); 
     load();
   } catch (e) {
-    closeSplashAd();
-    localStorage.clear();
-    location.reload();
+    console.error('Init failed:', e);
+    closeSplashAd(); // Force close if anything breaks
+    load();
   }
 });
