@@ -6,6 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (salary && payday) {
     showDashboard();
     calculateBudget();
+    // Auto-hide ad banner after 5 seconds
+const adBanner = document.querySelector('.ad-banner');
+if (adBanner) {
+  // Make it dismissible on tap
+  adBanner.style.cursor = 'pointer';
+  adBanner.onclick = () => adBanner.style.display = 'none';
+  
+  // Auto-hide after 5s
+  setTimeout(() => {
+    adBanner.style.opacity = '0';
+    adBanner.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => adBanner.style.display = 'none', 500);
+  }, 5000);
+}
   } else {
     showSetup();
   }
