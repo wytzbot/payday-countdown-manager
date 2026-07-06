@@ -1,4 +1,4 @@
-const CACHE_NAME = 'payday-countdown-v3';
+const CACHE_NAME = 'payday-pro-v1'; // changed from v3
 const BASE_PATH = '/payday-countdown-manager';
 
 const urlsToCache = [
@@ -20,26 +20,19 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then(names => Promise.all(
+      names.map(name => name !== CACHE_NAME ? caches.delete(name) : null)
+    )).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then(response => response || fetch(event.request))
-      .catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match(`${BASE_PATH}/offline.html`);
-        }
-      })
+      .then(res => res || fetch(event.request))
+      .catch(() => event.request.mode === 'navigate' 
+        ? caches.match(`${BASE_PATH}/offline.html`) 
+        : null
+      )
   );
 });
